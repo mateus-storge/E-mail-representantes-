@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Temperatura e follow-up da proposta</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f3f2f1;
+    --card: #ffffff;
+    --opt: #ffffff;
+    --opt-hover: #f4f6fa;
+    --opt-sel: #e6ecf7;
+    --line: #dcdcdc;
+    --text: #1f1d1d;
+    --muted: #6b6767;
+    --faint: #9a9595;
+    --accent: #2f63c4;
+    --pill-bg: #e7eefb;
+    --pill-line: #b9cbee;
+    --copy-bg: #f7f9fd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #242121;
+      --card: #2c2929;
+      --opt: #2c2929;
+      --opt-hover: #353131;
+      --opt-sel: #4a4646;
+      --line: #403c3c;
+      --text: #f2f0f0;
+      --muted: #a8a3a3;
+      --faint: #807b7b;
+      --accent: #6e9ef0;
+      --pill-bg: #233350;
+      --pill-line: #3a5a90;
+      --copy-bg: #232a36;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 12px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Fira Sans", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .card {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--accent);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .head { padding: 16px 22px; border-bottom: 1px solid var(--line); }
+  .head .t { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .head .s { font-size: 14px; color: var(--faint); margin-top: 2px; }
+  .body { padding: 18px 22px 24px; }
+
+  .q { margin-bottom: 22px; }
+  .q-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 600; font-size: 17px; }
+  .q-title .num { color: var(--muted); font-weight: 500; }
+  .q-sub { font-size: 14px; color: var(--muted); margin: 2px 0 10px 24px; }
+  .pill {
+    font-size: 13px; font-weight: 600; color: var(--accent);
+    background: var(--pill-bg); border: 1px solid var(--pill-line);
+    border-radius: 999px; padding: 2px 10px;
+  }
+  .collapsed { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 17px; }
+  .collapsed .num { color: var(--muted); }
+  .link {
+    margin-left: auto; background: none; border: 0; padding: 4px 2px;
+    color: var(--accent); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .link:hover { text-decoration: underline; }
+
+  .opts { display: grid; gap: 8px; }
+  .opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--opt);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .opt:hover { background: var(--opt-hover); }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .dot {
+    flex: none; width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid var(--faint);
+    display: grid; place-items: center;
+  }
+  .opt.sel { background: var(--opt-sel); border-color: transparent; font-weight: 600; }
+  .opt.sel .dot { border-color: var(--text); }
+  .opt.sel .dot::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--text); }
+  .opt input:focus-visible + .dot { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .reply { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 20px; }
+  .reply-title { font-size: 17px; font-weight: 700; margin: 0 0 4px; }
+  .reply-help { font-size: 15px; color: var(--muted); margin: 0 0 12px; }
+  .reply-box {
+    background: var(--copy-bg);
+    border: 1.5px dashed var(--accent);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 16px;
+    white-space: pre-wrap;
+    min-height: 52px;
+    user-select: all;
+  }
+  .reply-box.empty { color: var(--faint); font-style: italic; user-select: none; }
+  .copy-btn {
+    margin-top: 10px;
+    background: var(--accent); color: #fff;
+    border: 0; border-radius: 6px; padding: 9px 16px;
+    font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .copy-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .copy-status { margin-left: 10px; font-size: 14px; color: var(--muted); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="t">Temperatura e follow-up</div>
+    <div class="s">Toda proposta nasce com a próxima atividade agendada</div>
+  </div>
+
+  <div class="body">
+
+    <!-- PONTO 1: fechado (padrão) -->
+    <div class="q" id="q1-closed">
+      <div class="collapsed">
+        <span class="num">1 ·</span>
+        <span id="q1-current">Ainda não enviei a proposta</span>
+        <button type="button" class="link" id="btn-mudar">mudar</button>
+      </div>
+    </div>
+
+    <!-- PONTO 1: aberto (após clicar em mudar) -->
+    <div class="q" id="q1-open" hidden>
+      <div class="q-title">
+        <span><span class="num">1 ·</span> O que o cliente fez depois que recebeu a proposta?</span>
+        <button type="button" class="link" id="btn-fechar">cancelar</button>
+      </div>
+      <div class="q-sub">Marque o mais avançado que ele já fez. Se ele voltou atrás, marque o de agora.</div>
+      <div class="opts" data-q="1">
+        <label class="opt sel"><input type="radio" name="q1" value="Ainda não enviei a proposta" checked><span class="dot"></span>Ainda não enviei a proposta</label>
+        <label class="opt"><input type="radio" name="q1" value="Nada ainda: não respondeu, ou não falei mais com ele"><span class="dot"></span>Nada ainda: não respondeu, ou não falei mais com ele</label>
+        <label class="opt"><input type="radio" name="q1" value="Disse que não é para agora: obra parou ou ficou para depois"><span class="dot"></span>Disse que não é para agora: obra parou ou ficou para depois</label>
+        <label class="opt"><input type="radio" name="q1" value="Respondeu sem compromisso (&quot;recebi&quot;, &quot;vou analisar&quot;)"><span class="dot"></span>Respondeu sem compromisso ("recebi", "vou analisar")</label>
+        <label class="opt"><input type="radio" name="q1" value="Pediu revisão, desconto, prazo, pagamento ou documentação"><span class="dot"></span>Pediu revisão, desconto, prazo, pagamento ou documentação</label>
+        <label class="opt"><input type="radio" name="q1" value="Disse que vai fechar com a gente"><span class="dot"></span>Disse que vai fechar com a gente</label>
+        <label class="opt"><input type="radio" name="q1" value="Mandou o pedido de compra ou pediu os dados para faturar"><span class="dot"></span>Mandou o pedido de compra ou pediu os dados para faturar</label>
+      </div>
+    </div>
+
+    <!-- PONTO 2: sempre aberto -->
+    <div class="q">
+      <div class="q-title"><span><span class="num">2 ·</span> Essa compra já é do nosso cliente?</span></div>
+      <div class="q-sub">Ou ele ainda está concorrendo à obra?</div>
+      <div class="opts" data-q="2">
+        <label class="opt"><input type="radio" name="q2" value="Não sei ainda"><span class="dot"></span>Não sei ainda</label>
+        <label class="opt"><input type="radio" name="q2" value="Ainda não existe compra: é estimativa ou estudo de custo"><span class="dot"></span>Ainda não existe compra: é estimativa ou estudo de custo</label>
+        <label class="opt"><input type="radio" name="q2" value="Ainda não: ele está concorrendo à obra com outras empresas"><span class="dot"></span>Ainda não: ele está concorrendo à obra com outras empresas</label>
+        <label class="opt"><input type="radio" name="q2" value="Ainda não: é finalista ou negocia direto com o dono da obra"><span class="dot"></span>Ainda não: é finalista ou negocia direto com o dono da obra</label>
+        <label class="opt"><input type="radio" name="q2" value="Ganhou a obra, mas ainda falta o contrato ou o empenho"><span class="dot"></span>Ganhou a obra, mas ainda falta o contrato ou o empenho</label>
+        <label class="opt"><input type="radio" name="q2" value="Sim: ganhou a obra e tem contrato assinado"><span class="dot"></span>Sim: ganhou a obra e tem contrato assinado</label>
+        <label class="opt"><input type="radio" name="q2" value="Sim: é compra para ele mesmo (cliente final, reposição)"><span class="dot"></span>Sim: é compra para ele mesmo (cliente final, reposição)</label>
+      </div>
+    </div>
+
+    <!-- RESPOSTA PARA COPIAR -->
+    <div class="reply">
+      <p class="reply-title">Copie a resposta abaixo e envie na resposta deste e-mail</p>
+      <p class="reply-help">Selecione o texto do quadro (ou clique em “Copiar resposta”), responda este e-mail e cole no corpo da mensagem.</p>
+      <div class="reply-box empty" id="reply-box">Escolha uma opção acima para gerar a sua resposta.</div>
+      <button type="button" class="copy-btn" id="btn-copy" disabled>Copiar resposta</button>
+      <span class="copy-status" id="copy-status" aria-live="polite"></span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var q1Open = false;
+  var q1Closed = document.getElementById('q1-closed');
+  var q1OpenEl = document.getElementById('q1-open');
+  var q1Current = document.getElementById('q1-current');
+  var box = document.getElementById('reply-box');
+  var copyBtn = document.getElementById('btn-copy');
+  var status = document.getElementById('copy-status');
+
+  function selected(name) {
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : '';
+  }
+
+  function paint(name) {
+    document.querySelectorAll('input[name="' + name + '"]').forEach(function (r) {
+      r.closest('.opt').classList.toggle('sel', r.checked);
+    });
+  }
+
+  function update() {
+    var lines = [];
+    var a1 = selected('q1');
+    var a2 = selected('q2');
+    if (q1Open && a1) lines.push('1 - ' + a1);
+    if (a2) lines.push('2 - ' + a2);
+
+    q1Current.textContent = a1 || 'Ainda não enviei a proposta';
+    status.textContent = '';
+
+    if (lines.length) {
+      box.textContent = lines.join('\n');
+      box.classList.remove('empty');
+      copyBtn.disabled = false;
+    } else {
+      box.textContent = 'Escolha uma opção acima para gerar a sua resposta.';
+      box.classList.add('empty');
+      copyBtn.disabled = true;
+    }
+  }
+
+  document.querySelectorAll('input[type="radio"]').forEach(function (r) {
+    r.addEventListener('change', function () { paint(r.name); update(); });
+  });
+
+  document.getElementById('btn-mudar').addEventListener('click', function () {
+    q1Open = true;
+    q1Closed.hidden = true;
+    q1OpenEl.hidden = false;
+    update();
+  });
+
+  document.getElementById('btn-fechar').addEventListener('click', function () {
+    q1Open = false;
+    var first = document.querySelector('input[name="q1"]');
+    first.checked = true;
+    paint('q1');
+    q1OpenEl.hidden = true;
+    q1Closed.hidden = false;
+    update();
+  });
+
+  copyBtn.addEventListener('click', function () {
+    var text = box.textContent;
+    function ok() { status.textContent = 'Copiado. Agora é só colar na resposta do e-mail.'; }
+    function fallback() {
+      var range = document.createRange();
+      range.selectNodeContents(box);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      try { document.execCommand('copy'); ok(); }
+      catch (e) { status.textContent = 'Texto selecionado: use Ctrl+C para copiar.'; }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
